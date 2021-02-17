@@ -1,46 +1,20 @@
 version: 2.1
 
-# Copyright (c) 2019 Wladislaw Wagner (Vitasystems GmbH).
-# This file is part of Project EHRbase
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on a, Pablo Pazosn Vitasystems GmbHS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
-#   88888888888  88        88  88888888ba   88888888ba         db         ad88888ba   88888888888
-#   88           88        88  88      "8b  88      "8b       d88b       d8"     "8b  88
-#   88           88        88  88      ,8P  88      ,8P      d8'`8b      Y8,          88
-#   88aaaaa      88aaaaaaaa88  88aaaaaa8P'  88aaaaaa8P'     d8'  `8b     `Y8aaaaa,    88aaaaa
-#   88"""""      88""""""""88  88""""88'    88""""""8b,    d8YaaaaY8b      `"""""8b,  88"""""
-#   88           88        88  88    `8b    88      `8b   d8""""""""8b           `8b  88
-#   88           88        88  88     `8b   88      a8P  d8'        `8b  Y8a     a8P  88
-#   88888888888  88        88  88      `8b  88888888P"  d8'          `8b  "Y88888P"   88888888888
-
-
+## Nightly builds only 
 
 workflows:
   version: 2
-
-  # WORKFLOW 1/3
-  build-and-test:
+  nightly:
+    triggers:
+      - schedule:
+          cron: "0 21 * * *"
+          filters:
+            branches:
+              only:
+                - feature/NUM-985-nightly-builds
     jobs:
       - build-ehrbase:
           context: org-global
-          filters:
-            branches:
-              ignore:
-                - /release\/.*/
-                - master
-                - /sync\/.*/
-                - /feature/sync\/.*/
       
       - run-SDK-integration-tests:
           context: org-global
@@ -52,8 +26,6 @@ workflows:
           requires:
             - build-ehrbase
             - QUERYSERVICE-test-1
-          # post-steps:
-          #   - provide-test-status-report-via-slack #
 
       - COMPOSITION-tests-2:
           context: org-global
@@ -108,11 +80,6 @@ workflows:
           requires:
             - build-ehrbase
       
-      # - QUERYSERVICE-smoke:
-      #     context: org-global
-      #     # requires:
-      #     #   - build-ehrbase
-
       - QUERYSERVICE-test-2:
           context: org-global
           requires:
@@ -150,314 +117,6 @@ workflows:
           context: org-global
           requires:
             - run-SDK-integration-tests
-            # TODO: reactivate this after https://github.com/ehrbase/ehrbase/issues/330
-            #       resolved
-            # - COMPOSITION-tests-1
-            # - COMPOSITION-tests-2
-            # - COMPOSITION-tests-3
-            # - COMPOSITION-tests-4
-            # - CONTRIBUTION-test
-            # - DIRECTORY-test
-            # - EHRSERVICE-test
-            # - EHRSTATUS-test
-            # - KNOWLEDGE-test
-            # - QUERYSERVICE-test-1
-            # - QUERYSERVICE-test-2
-            # - SECURITY-test
-
-
-
-
-
-  # WORKFLOW 2/3
-  release:
-    jobs:
-      - build-ehrbase:
-          context: org-global
-          filters:
-            branches:
-              only:
-                - /^(release\/v\d+\.\d+\.\d+|master)$/
-
-      - run-SDK-integration-tests:
-          context: org-global
-          requires:
-            - build-ehrbase
-
-      - COMPOSITION-tests-1:
-          context: org-global
-          requires:
-            - build-ehrbase
-            - QUERYSERVICE-test-2
-          # post-steps:
-          #   - provide-test-status-report-via-slack #
-
-      - COMPOSITION-tests-2:
-          context: org-global
-          requires:
-            - build-ehrbase
-            - QUERYSERVICE-test-2
-
-      - COMPOSITION-tests-3:
-          context: org-global
-          requires:
-            - build-ehrbase
-            - QUERYSERVICE-test-2
-
-      - COMPOSITION-tests-4:
-          context: org-global
-          requires:
-            - build-ehrbase
-            - QUERYSERVICE-test-2
-
-      - CONTRIBUTION-test:
-          context: org-global
-          requires:
-            - build-ehrbase
-            - QUERYSERVICE-test-2
-
-      - DIRECTORY-test:
-          context: org-global
-          requires:
-            - build-ehrbase
-            - QUERYSERVICE-test-2
-
-      - EHRSERVICE-test:
-          context: org-global
-          requires:
-            - build-ehrbase
-            - QUERYSERVICE-test-2
-
-      - EHRSTATUS-test:
-          context: org-global
-          requires:
-            - build-ehrbase
-            - QUERYSERVICE-test-2
-
-      - KNOWLEDGE-test:
-          context: org-global
-          requires:
-            - build-ehrbase
-            - QUERYSERVICE-test-2
-
-      - QUERYSERVICE-test-1:
-          context: org-global
-          requires:
-            - build-ehrbase
-
-      - QUERYSERVICE-test-2:
-          context: org-global
-          requires:
-            - build-ehrbase
-
-      - SECURITY-test:
-          context: org-global
-          requires:
-            - build-ehrbase
-
-      - ADMIN-test:
-          context: org-global
-          requires:
-            - build-ehrbase
-
-      - ROBOT-TEST-REPORT:
-          context: org-global
-          requires:
-            - COMPOSITION-tests-1
-            - COMPOSITION-tests-2
-            - COMPOSITION-tests-3
-            - COMPOSITION-tests-4
-            - CONTRIBUTION-test
-            - DIRECTORY-test
-            - EHRSERVICE-test
-            - EHRSTATUS-test
-            - KNOWLEDGE-test
-            - QUERYSERVICE-test-1
-            - QUERYSERVICE-test-2
-            - SECURITY-test
-            - ADMIN-test
-
-      - sonar-analysis:
-          context: org-global
-          requires:
-            - run-SDK-integration-tests
-            # TODO: reactivate this after https://github.com/ehrbase/ehrbase/issues/330
-            #       resolved
-            # - COMPOSITION-tests-1
-            # - COMPOSITION-tests-2
-            # - COMPOSITION-tests-3
-            # - COMPOSITION-tests-4
-            # - CONTRIBUTION-test
-            # - DIRECTORY-test
-            # - EHRSERVICE-test
-            # - EHRSTATUS-test
-            # - KNOWLEDGE-test
-            # - QUERYSERVICE-test-1
-            # - QUERYSERVICE-test-2
-            # - SECURITY-test
-
-
-
-
-
-  # WORKFLOW 3/3
-  synced-feature-check:
-    description: |
-      WHAT THIS WORKFLOW DOES
-      =======================
-
-      Build EHRbase and run all openEHR_SDK Java tests (unit and integration tests)
-      with SDK being checked out from a branch named sync/* or sync/feature/*
-
-      Consider the following scenarios
-      --------------------------------
-
-      code change in repo |
-      EHRBASE	    SDK     |   BRANCH          |   CI ACTION       |   COMMENT
-      --------------------|-------------------|-------------------|---------------------------------------------------------------------
-
-      YES	        NO	        feature/*           default build	      ehrbase uses SDK referenced in it's parent pom.xml	(commit hash)
-      NO	        YES	        feature/*	          default build	      sdk uses EHRBASE (built) from develop branch
-
-      YES	        YES	        feature/*	          SHOULD FAIL		      default builds triggered on both CIs do not take into account
-                                                                      respective changes in the featue branch of the other repository
-                                                                      NOTE: if the build does NOT fail on ehrbase's and/or sdk's CI
-                                                                            then proper Java unit/integration tests are missing!
-
-      YES	        NO	        sync/feature/*	    SHOULD FAIL	        ehrbase's CI fails to checkout sync/feature/* branch from sdk repo
-      NO 	        YES	        sync/feature/*	    SHOULD FAIL	        sdk's CI fails to checkout sync/feature/* branch from ehrbase repo
-
-      YES	        YES	        sync/feature/*	    synced build	      - ehrbase's CI uses SDK from sync/feature/* branch
-                                                                      - sdk's CI uses EHRBASE from sync/feature/* branch
-
-      explanations        
-      --------------------	
-      default build (ehrbase)		EHRbase is build using SDK version given in it's parent pom.xml
-      default build (sdk)		    SDK is build and tested using EHRbase build from develop branch
-
-      synced build                both CIs take into account respective changes in sync/feature/*
-                                  branch of each repository
-
-      Find detailed steps description for this workflow in following jobs:
-      - "pull build install sdk from sync-branch"
-      - "build package ehrbase with locally installed sdk"
-      - "run java integration tests - sdk"
-
-      HOW TO USE THIS WORKFLOW?
-      =========================
-
-      1. create TWO branches "sync/[issue-id]_name branches" respectively in
-
-        - ehrbase repo       --> i.e.    sync/123_example-issue
-        - openehr_sdk repo   --> i.e.    sync/123_example-issue
-
-      2. apply and commit your code changes (!!! in both repositories)
-      3. push to openehr_sdk repo (sdk's CI will trigger a similar workflow)
-      4. push to ehrbase repo (ehrbase's CI will trigger this workflow)
-
-        NOTE: at this point 'synced build' should be running on both CIs
-
-      5. create TWO PRs (one in ehrbase, one in openehr_sdk)
-      6. merge both PRs (WARNING):
-
-      ///////////////////////////////////////////////////////////////////////
-      ///                                                                 ///
-      ///  - make sure that both PRs are reviewed and ready to be merged  ///
-      ///    at the same time!                                            ///
-      ///  - make sure to sync both PRs w/ develop before merging!        ///
-      ///  - open each PR in it's own browser window                      ///
-      ///  - MERGE BOTH PRs AT THE SAME TIME!                             ///
-      ///                                                                 ///
-      //////////////////////////////////////////////////////////////////////
-    
-    # when:
-    #   or:
-    #     - equal: [ sync/*, << pipeline.git.branch >> ]
-    #     - equal: [ feature/sync/*, << pipeline.git.branch >> ]
-
-    jobs:
-      - pull build install sdk from sync-branch:
-          filters:
-            branches:
-              only:
-                - /^sync\/.*/
-                - /^feature\/sync\/.*/
-      - build package ehrbase with locally installed sdk:
-          requires:
-            - pull build install sdk from sync-branch
-      - run java integration tests - sdk:
-          requires:
-            - build package ehrbase with locally installed sdk
-      - COMPOSITION-tests-1:
-          context: org-global
-          requires:
-            - build package ehrbase with locally installed sdk
-      - COMPOSITION-tests-2:
-          context: org-global
-          requires:
-            - build package ehrbase with locally installed sdk
-      - COMPOSITION-tests-3:
-          context: org-global
-          requires:
-            - build package ehrbase with locally installed sdk
-      - COMPOSITION-tests-4:
-          context: org-global
-          requires:
-            - build package ehrbase with locally installed sdk
-      - CONTRIBUTION-test:
-          context: org-global
-          requires:
-            - build package ehrbase with locally installed sdk
-      - DIRECTORY-test:
-          context: org-global
-          requires:
-            - build package ehrbase with locally installed sdk
-      - EHRSERVICE-test:
-          context: org-global
-          requires:
-            - build package ehrbase with locally installed sdk
-      - EHRSTATUS-test:
-          context: org-global
-          requires:
-            - build package ehrbase with locally installed sdk
-      - KNOWLEDGE-test:
-          context: org-global
-          requires:
-            - build package ehrbase with locally installed sdk
-      - QUERYSERVICE-test-1:
-          context: org-global
-          requires:
-            - build package ehrbase with locally installed sdk
-      - QUERYSERVICE-test-2:
-          context: org-global
-          requires:
-            - build package ehrbase with locally installed sdk
-      - SECURITY-test:
-          context: org-global
-          requires:
-            - build package ehrbase with locally installed sdk
-      - ADMIN-test:
-          context: org-global
-          requires:
-            - build package ehrbase with locally installed sdk
-      - ROBOT-TEST-REPORT:
-          context: org-global
-          requires:
-            - COMPOSITION-tests-1
-            - COMPOSITION-tests-2
-            - COMPOSITION-tests-3
-            - COMPOSITION-tests-4
-            - CONTRIBUTION-test
-            - DIRECTORY-test
-            - EHRSERVICE-test
-            - EHRSTATUS-test
-            - KNOWLEDGE-test
-            - QUERYSERVICE-test-1
-            - QUERYSERVICE-test-2
-            - SECURITY-test
-            - ADMIN-test
-
-
 
 
 
@@ -980,7 +639,6 @@ commands:
           when: always
           command: |
             cd tests
-
             # Create Log/Report with ALL DETAILS
             rebot --outputdir results/0 \
                   --name EHRbase \
@@ -997,7 +655,6 @@ commands:
           when: always
           command: |
             cd tests
-
             # Create JUNIT report from merged results
             rebot --outputdir results/robot-tests \
                   -e obsolete -e libtest \
@@ -1054,8 +711,6 @@ commands:
           command: |
             cd ~/projects/openEHR_SDK
             mvn install -Dmaven.javadoc.skip=true -Djacoco.skip=true -Dmaven.test.skip
-
-
   start-ehrbase-and-run-java-integration-sdk-tests:
     description: |
       Starts ehrbase server and runs maven test phase using 'slow' profile defined in parent pom.xml
@@ -1102,8 +757,6 @@ commands:
               sleep 1
             done;
             echo "Jacoco execution data found!"
-
-
   collect-sdk-it-coverage:
     description: Persists coverage execution data from SDK integration tests
     steps:
@@ -1254,8 +907,6 @@ commands:
           name: Maven build EHRbase
           command: |
             mvn package -Dmaven.javadoc.skip=true     # -Dmaven.test.skip
-
-
   start-ehrbase-server:
     steps:
       - install-maven
@@ -1269,8 +920,6 @@ commands:
             java -jar application/target/application-${EHRbase_VERSION}.jar --cache.enabled=true > log &
             grep -m 1 "Started EhrBase in" <(tail -f log)
             jps
-
-
   cache-in-ehrbase-m2-dependencies-syncbranch:
     steps:
       - save_cache:
@@ -1367,7 +1016,6 @@ commands:
             git config --global user.name "ci-bot"
             # git config --global push.followTags true
             git remote -v
-
   install-java-11:
     description: Install Zulu Java 11
     steps:
@@ -1438,8 +1086,6 @@ commands:
           command: |
             sudo killall -9 apt-get || true
             sudo apt -y update && sudo apt -y install xmlstarlet
-
-
   configure-python-version:
     description: Configure Python version to 3.7.0
     steps:
@@ -1447,7 +1093,6 @@ commands:
           name: Configure Python version to 3.7.0
           command: |
             pyenv global 3.7.0
-
   install-python-requirements:
     description: Install Python requirements
     steps:
@@ -1456,7 +1101,6 @@ commands:
           command: |
             python -c "import site; print(site.getsitepackages())"
             pip install -r ~/projects/tests/requirements.txt
-
   install-python3-requirements:
     description: Install Python requirements
     steps:
@@ -1465,7 +1109,6 @@ commands:
           command: |
             python3 -c "import site; print(site.getsitepackages())"
             pip3 install -r ~/projects/tests/requirements.txt
-
   setup-database:
     description: Setup ehrbase database
     steps:
@@ -1477,8 +1120,6 @@ commands:
                         -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD -d \
                         -e DISABLE_SECURITY=true \
                         -p 5432:5432 ehrbase/ehrbase-postgres:11.10
-
-
   setup-file-repo:
     description: Setup file repo
     steps:
@@ -1486,7 +1127,6 @@ commands:
           name: Unzip provided file repo
           command: |
             unzip ~/projects/.circleci/file_repo_content.zip -d ~/projects
-
   setup-jacoco-distribution:
     description: Download and unzip Jacoco Code Coverage Tool
     steps:
@@ -1527,7 +1167,6 @@ commands:
             cd ~/projects
             mvn org.jacoco:jacoco-maven-plugin:0.8.2:prepare-agent test \
                 org.jacoco:jacoco-maven-plugin:0.8.2:report
-
   persist-unit-test-coverage:
     description: Persist unit test coverage report to workspace
     steps:
@@ -1579,13 +1218,6 @@ commands:
           command: |
             cd ~/projects
             mvn package     # -DskipTests
-
-
-
-
-
-
-
   #                                                88
   #                                                88
   #                                                88
@@ -1870,152 +1502,3 @@ executors:
       BRANCH_NAME: << pipeline.git.branch >>
     machine:
       image: ubuntu-2004:202008-01
-
-
-
-
-
-
-
-
-
-
-# oooooooooo.        .o.         .oooooo.   oooo    oooo ooooo     ooo ooooooooo.
-# `888'   `Y8b      .888.       d8P'  `Y8b  `888   .8P'  `888'     `8' `888   `Y88.
-#  888     888     .8"888.     888           888  d8'     888       8   888   .d88'
-#  888oooo888'    .8' `888.    888           88888[       888       8   888ooo88P'
-#  888    `88b   .88ooo8888.   888           888`88b.     888       8   888
-#  888    .88P  .8'     `888.  `88b    ooo   888  `88b.   `88.    .8'   888
-# o888bood8P'  o88o     o8888o  `Y8bood8P'  o888o  o888o    `YbodP'    o888o
-#
-# [ BACKUP ]
-
-# upload-test-status-report-to-slack:
-#   description: Uploads status report to Slack
-#   steps:
-#       - run:
-#           name: Upload test status report to Slack
-#           command: |
-#               curl -F file=@/home/circleci/projects/tests/results/test-status-report.png \
-#                    -F channels=playground \
-#                    -F title="${CIRCLE_PROJECT_REPONAME} TEST STATUS | ${CIRCLE_BRANCH}"  \
-#                    -H "Authorization: Bearer xoxp-701547379457-696494594291-710681511959-9c9a861be3770efdd4f8637a076bf8c8" \
-#                    https://slack.com/api/files.upload
-
-# save-chrome-and-chromedirver-download-cache:
-#   description: Save Google Chrome and chromedriver download to cache
-#   steps:
-#     - save_cache:
-#         key: google-chrome-incl-webdriver-{{ $CHROME_VERSION }}
-#         paths:
-#           - ~/downloads/chrome
-#
-#
-# restore-chrome-and-chromedirver-download-cache:
-#   description: Restore Google Chrome and chromedriver download from cache
-#   steps:
-#     - restore_cache:
-#         key: google-chrome-incl-webdriver-
-
-# COMPOSITION-tests-1:
-#     machine:
-#       image: ubuntu-1604:201903-01
-#     environment:
-#       POSTGRES_USER: postgres
-#       POSTGRES_PASSWORD: postgres
-#     steps:
-#       - configure-python-version
-#       - checkout
-#       - restore-integration-tests-job-caches
-#       - setup-jacoco-distribution
-#       - attach-target-folder
-#       - install-python-requirements
-#       - run-integration-tests:
-#           include: "compositionANDjson1"
-#       - save-integration-tests-job-caches
-
-# run-integration-tests:
-#   description: Run integration tests
-#   parameters:
-#     include:
-#       type: string
-#       default: xxx
-#   steps:
-#       - run:
-#           name: Run integration tests with coverage
-#           no_output_timeout: 45m
-#           command: |
-#               cd tests
-#               robot -d results --console dotted --noncritical not-ready -L TRACE \
-#                     -i << parameters.include >> \
-#                     -e libtest \
-#                     -e obsolete \
-#                     -e future \
-#                     -e TODO \
-#                     -e circleci \
-#                     -e EHRSCAPE \
-#                     --xunit junit-output.xml --xunitskipnoncritical \
-#                     -v CODE_COVERAGE:True \
-#                     -v JACOCO_LIB_PATH:/home/circleci/jacoco-0.8.2/lib \
-#                     -v COVERAGE_DIR:/home/circleci/projects/application/target robot/
-
-# set-slack-build-status:
-#   description: Set status env at the end of a job based on success or failure.
-#   steps:
-#       - run:
-#           name: Slack - Setting Failure Condition
-#           when: on_fail
-#           command: |
-#               echo 'export SLACK_BUILD_STATUS="FAIL"' >> $BASH_ENV
-#       - run:
-#           when: on_success
-#           name: Slack - Setting Success Condition
-#           command: |
-#             echo 'export SLACK_BUILD_STATUS="PASS"' >> $BASH_ENV
-
-# provide-test-status-report-via-slack:
-#   description: Generates an integration test status report and sends it to our Slack channel
-#   steps:
-#       - set-slack-build-status
-#       - run:
-#           name: Download and install Chrome and Chromedriver
-#           when: always
-#           command: |
-#               mkdir -p ~/downloads/chrome
-#               cd ~/downloads/chrome
-#               sudo killall -9 apt-get || true && \
-#               sudo apt-get update && \
-#               sudo apt-get install -f lsb-release libappindicator3-1
-#               [ -e google-chrome.deb ] || curl -L -o google-chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-#               sudo dpkg --configure -a
-#               sudo dpkg -i google-chrome.deb
-#               sudo sed -i 's|HERE/chrome"|HERE/chrome" --no-sandbox|g' /opt/google/chrome/google-chrome
-#               rm google-chrome.deb
-#               CHROME_VERSION=$(google-chrome --version | sed -r 's/[^0-9]+([0-9]+\.[0-9]+\.[0-9]+).*/\1/g')
-#               CHROMEDRIVER_VERSION=$(curl -s https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$CHROME_VERSION)
-#               [ -e chromedriver_linux64.zip ] || wget https://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION/chromedriver_linux64.zip
-#               unzip chromedriver_linux64.zip
-#               sudo mv chromedriver /usr/local/bin/chromedriver
-#               sudo chown root:root /usr/local/bin/chromedriver
-#               sudo chmod +x /usr/local/bin/chromedriver
-#       - run:
-#           name: Check Browser Versions
-#           when: always
-#           command: |
-#               which chromedriver
-#               chromedriver --version
-#               google-chrome --version
-#       - run:
-#           name: Generate and Send  Test Report To Slack Channel
-#           when: always
-#           command: |
-#               cd tests
-#               cp robot/_resources/status_report.robot  results/status_report.robot
-#               cp robot/_resources/slack-message.json  results/slack-message.json
-#               cp robot/_resources/logo.jpg results/logo.jpg
-#               cd results
-#               robot -d trash --output NONE --log NONE --noncritical chill status_report.robot
-#       - store_test_results:
-#           path: ~/projects/tests/results/
-#       - store_artifacts:
-#           path: ~/projects/tests/results/
